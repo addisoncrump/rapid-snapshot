@@ -1,6 +1,7 @@
 use std::collections::hash_map::Entry;
 use std::collections::HashMap;
 use std::mem::size_of;
+use std::time::Instant;
 
 use rand::{Rng, SeedableRng};
 use rand_chacha::ChaChaRng;
@@ -133,6 +134,8 @@ fn main() {
     let mut cache = DiffCache::new();
     cache.push(Diff::new()); // initialize the cache
 
+    let start_time = Instant::now();
+
     // initialise
     for _ in 0..ROUNDS {
         // not realistic updating strategy, but it serves a point
@@ -158,6 +161,14 @@ fn main() {
             }
         }
     }
+
+    let diff = Instant::now() - start_time;
+
+    println!(
+        "it took {} seconds to do {} rounds of snapshotting",
+        diff.as_secs_f64(),
+        ROUNDS
+    );
 
     println!("checking that all states can be recovered successfully (takes a long time for large state size!)");
 
