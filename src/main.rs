@@ -6,11 +6,11 @@ use rand::{Rng, SeedableRng};
 use rand_chacha::ChaChaRng;
 
 // number of operations to perform on the state
-const ROUNDS: usize = 1 << 16;
+const ROUNDS: usize = 1 << 20;
 // the largest number of operations which may be performed between two states
-const MAX_STEP_DIFF: usize = 128;
+const MAX_STEP_DIFF: usize = 32;
 // the size of each state
-const STATE_SIZE: usize = 1 << 16;
+const STATE_SIZE: usize = 1 << 10;
 
 // the value type recorded in the state
 type ValueType = u64;
@@ -93,15 +93,19 @@ fn union_diff(dest: &mut Diff, src: &Diff) {
 fn append_diff(log: &mut StateLog, cache: &mut DiffCache, mut diff: Diff) {
     let evicted_count = (log.len() + 1).trailing_zeros();
     let mut last_evicted = None;
-    for _ in 0..evicted_count {
-        last_evicted = cache.pop().or(last_evicted); // allow for new insertions
+    for _ in 0..=evicted_count {
+        last_evicted = match (cache.pop(), last_evicted) {
+            (Some(mut cached), Some(evicted)) => {
+                union_diff(&mut cached, &evicted);
+                Some(cached)
+            }
+            (None, None) => unreachable!(
+                "Should never run out of cached entries without having a value already"
+            ),
+            (None, evicted) | (evicted, None) => evicted,
+        }
     }
     debug_assert!(evicted_count == 0 || last_evicted.is_some());
-
-    // update the diffs that remain
-    for remaining in cache.iter_mut() {
-        union_diff(remaining, &diff);
-    }
 
     // prepare fresh diff
     if let Some(mut cached) = last_evicted {
@@ -112,9 +116,11 @@ fn append_diff(log: &mut StateLog, cache: &mut DiffCache, mut diff: Diff) {
         cache.push(cached);
 
         // insert fresh diffs since we haven't made any change since the one we just replaced yet
-        for _ in 1..evicted_count {
+        for _ in 0..evicted_count {
             cache.push(Diff::new());
         }
+    } else {
+        cache.push(diff.clone());
     }
     log.push(diff);
 }
@@ -132,7 +138,7 @@ fn main() {
         // not realistic updating strategy, but it serves a point
         let mut diff = Diff::new();
 
-        for _ in 0..rng.gen_range(0..MAX_STEP_DIFF) {
+        for _ in 0..rng.gen_range(0..=MAX_STEP_DIFF) {
             let idx = rng.gen_range(0..state.len());
             let value = rng.gen();
 
@@ -163,7 +169,7 @@ fn main() {
         // not realistic updating strategy, but it serves a point
         let mut diff = Diff::new();
 
-        for _ in 0..rng.gen_range(0..MAX_STEP_DIFF) {
+        for _ in 0..rng.gen_range(0..=MAX_STEP_DIFF) {
             let idx = rng.gen_range(0..state.len());
             let value = rng.gen();
 
