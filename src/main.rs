@@ -6,11 +6,11 @@ use rand::{Rng, SeedableRng};
 use rand_chacha::ChaChaRng;
 
 // number of operations to perform on the state
-const ROUNDS: usize = 1 << 20;
+const ROUNDS: usize = 1 << 16;
 // the largest number of operations which may be performed between two states
-const MAX_STEP_DIFF: usize = 32;
+const MAX_STEP_DIFF: usize = 128;
 // the size of each state
-const STATE_SIZE: usize = 1 << 10;
+const STATE_SIZE: usize = 1 << 16;
 
 // the value type recorded in the state
 type ValueType = u64;
