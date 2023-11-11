@@ -10,7 +10,7 @@ const ROUNDS: usize = 1 << 16;
 // the largest number of operations which may be performed between two states
 const MAX_STEP_DIFF: usize = 128;
 // the size of each state
-const STATE_SIZE: usize = 1 << 20;
+const STATE_SIZE: usize = 1 << 16;
 
 // the value type recorded in the state
 type ValueType = u64;
@@ -153,7 +153,7 @@ fn main() {
         }
     }
 
-    println!("checking that all states can be recovered successfully (takes a long time for large state size!");
+    println!("checking that all states can be recovered successfully (takes a long time for large state size!)");
 
     let mut rng = ChaChaRng::seed_from_u64(0); // reinit with seed 0 to test
     let mut state = initial_state(); // reset the state
