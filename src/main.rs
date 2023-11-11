@@ -7,9 +7,9 @@ use rand::{Rng, SeedableRng};
 use rand_chacha::ChaChaRng;
 
 // number of operations to perform on the state
-const ROUNDS: usize = 1 << 16;
+const ROUNDS: usize = 1 << 20;
 // the largest number of operations which may be performed between two states
-const MAX_STEP_DIFF: usize = 128;
+const MAX_STEP_DIFF: usize = 8;
 // the size of each state
 const STATE_SIZE: usize = 1 << 16;
 
